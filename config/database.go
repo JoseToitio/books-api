@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -14,7 +16,20 @@ import (
 var DB *gorm.DB
 
 func ConnectDatabase() {
-	dsn := "host=localhost user=postgres password=root port=5432 sslmode=disable"
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		host, user, password, dbname, port)
+
+	fmt.Println("Conectando ao banco de dados em:", dsn)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		panic("Erro ao conectar ao PostgreSQL: " + err.Error())
@@ -28,7 +43,6 @@ func ConnectDatabase() {
 		fmt.Println("Banco de dados 'booksdb' criado com sucesso!")
 	}
 
-	dsn = "host=localhost user=postgres password=root dbname=booksdb port=5432 sslmode=disable"
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Erro ao conectar ao banco de dados 'booksdb': " + err.Error())
